@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>AMApplicationBuild</key>
+	<string>523</string>
+	<key>AMApplicationVersion</key>
+	<string>2.10</string>
+	<key>AMDocumentVersion</key>
+	<string>2</string>
+	<key>actions</key>
+	<array>
+		<dict>
+			<key>action</key>
+			<dict>
+				<key>AMAccepts</key>
+				<dict>
+					<key>Container</key>
+					<string>List</string>
+					<key>Optional</key>
+					<true/>
+					<key>Types</key>
+					<array>
+						<string>com.apple.applescript.object</string>
+					</array>
+				</dict>
+				<key>AMActionVersion</key>
+				<string>1.0.2</string>
+				<key>AMApplication</key>
+				<array>
+					<string>Automator</string>
+				</array>
+				<key>AMParameterProperties</key>
+				<dict>
+					<key>source</key>
+					<dict/>
+				</dict>
+				<key>AMProvides</key>
+				<dict>
+					<key>Container</key>
+					<string>List</string>
+					<key>Types</key>
+					<array>
+						<string>com.apple.applescript.object</string>
+					</array>
+				</dict>
+				<key>ActionBundlePath</key>
+				<string>/System/Library/Automator/Run AppleScript.action</string>
+				<key>ActionName</key>
+				<string>Run AppleScript</string>
+				<key>ActionParameters</key>
+				<dict>
+					<key>source</key>
+					<string>on run {input, parameters}		-- #1 REPLACE THE X's WITH THE PATH TO YOUR PYTHON SCRIPT	set pythonScriptPath to "/Users/mtosca/The Solarpunk Project/The Weather Text/Send Bulk SMS/Python script iMessage.py"	-- #2 REPLACE THE X's WITH THE PATH TO WHERE YOUR PYTHON IS STORED ON YOUR COMPUTER		set shellCommand to "/usr/local/bin/python3 " &amp; quoted form of pythonScriptPath				set phoneNumbersAndMessages to do shell script shellCommand	set {phoneNumbers, textMessages} to parsePhoneNumbersAndMessages(phoneNumbersAndMessages)	sendTextMessages(phoneNumbers, textMessages)		return inputend runon sendTextMessages(phoneNumbers, textMessages)	tell application "Messages"		set smsService to 1st account whose service type = iMessage				repeat with i from 1 to count of phoneNumbers			set phoneNumber to item i of phoneNumbers			set message to item i of textMessages			send message to participant phoneNumber of smsService			delay 4		end repeat	end tellend sendTextMessageson parsePhoneNumbersAndMessages(phoneNumbersAndMessages)	set phoneNumbers to {}	set textMessages to {}	set delimiter to "|**|"	set phoneNumbersAndMessagesList to splitText(phoneNumbersAndMessages, delimiter)	repeat with itemString in phoneNumbersAndMessagesList		set {phoneNumber, message} to splitPhoneNumberAndMessage(itemString)		if phoneNumber is not equal to missing value then			set end of phoneNumbers to phoneNumber			set end of textMessages to message		end if	end repeat		return {phoneNumbers, textMessages}end parsePhoneNumbersAndMessageson splitPhoneNumberAndMessage(itemString)	set phoneNumber to ""	set message to ""		set phoneNumberDelimiter to " "	if itemString contains phoneNumberDelimiter then		set phoneNumber to text 1 thru ((offset of phoneNumberDelimiter in itemString) - 1) of itemString		set message to text ((offset of phoneNumberDelimiter in itemString) + (length of phoneNumberDelimiter)) thru -1 of itemString	end if		return {phoneNumber, message}end splitPhoneNumberAndMessageon splitText(inputText, delimiter)	-- Replace the delimiter with a unique newline character sequence	set text item delimiters to delimiter	set listItems to every text item of inputText	set text item delimiters to ASCII character 10 -- newline	return listItemsend splitText</string>
+				</dict>
+				<key>BundleIdentifier</key>
+				<string>com.apple.Automator.RunScript</string>
+				<key>CFBundleVersion</key>
+				<string>1.0.2</string>
+				<key>CanShowSelectedItemsWhenRun</key>
+				<false/>
+				<key>CanShowWhenRun</key>
+				<true/>
+				<key>Category</key>
+				<array>
+					<string>AMCategoryUtilities</string>
+				</array>
+				<key>Class Name</key>
+				<string>RunScriptAction</string>
+				<key>InputUUID</key>
+				<string>17082498-FC06-40AA-8C8A-30BC78A51F9A</string>
+				<key>Keywords</key>
+				<array>
+					<string>Run</string>
+				</array>
+				<key>OutputUUID</key>
+				<string>1A4B74D4-9C6A-446A-AB0D-7203C02FD920</string>
+				<key>ShowWhenRun</key>
+				<false/>
+				<key>UUID</key>
+				<string>C9391BBD-A9C3-47E5-BA56-2884E3FB5661</string>
+				<key>UnlocalizedApplications</key>
+				<array>
+					<string>Automator</string>
+				</array>
+				<key>arguments</key>
+				<dict>
+					<key>0</key>
+					<dict>
+						<key>default value</key>
+						<string>on run {input, parameters}
+	
+	(* Your script goes here *)
+	
+	return input
+end run</string>
+						<key>name</key>
+						<string>source</string>
+						<key>required</key>
+						<string>0</string>
+						<key>type</key>
+						<string>0</string>
+						<key>uuid</key>
+						<string>0</string>
+					</dict>
+				</dict>
+				<key>isViewVisible</key>
+				<integer>1</integer>
+				<key>location</key>
+				<string>309.000000:643.000000</string>
+				<key>nibPath</key>
+				<string>/System/Library/Automator/Run AppleScript.action/Contents/Resources/Base.lproj/main.nib</string>
+			</dict>
+			<key>isViewVisible</key>
+			<integer>1</integer>
+		</dict>
+	</array>
+	<key>connectors</key>
+	<dict/>
+	<key>workflowMetaData</key>
+	<dict>
+		<key>workflowTypeIdentifier</key>
+		<string>com.apple.Automator.workflow</string>
+	</dict>
+</dict>
+</plist>
