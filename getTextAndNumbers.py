@@ -1,72 +1,19 @@
 import os
-#import csv
-# To run this on Mika's PC do we need to install these packages?? how would we do this?
-# from google.oauth2 import service_account
-# from googleapiclient.discovery import build
-# from py_imessage import imessage
 
-credentialsPath = '/Users/nmestrad/Documents/Keys/client_secret_975762424647-65soulb2m5h4b85o4gke286rjf8jtvfe.apps.googleusercontent.com.json'
-
-# credentials = service_account.Credentials.from_service_account_file(
-#     credentialsPath)
-# # Authenticate using your credentials.json file for Google Docs API
-# credentials = credentials.from_authorized_user_file(credentialsPath, scopes=['https://www.googleapis.com/auth/documents.readonly'])
-
-# # Create the Docs API service
-# service = build('docs', 'v1', credentials=credentials)
-
-# # Authenticate using your credentials.json file for Google Sheets API
-# #credentials = Credentials.from_authorized_user_file(credentialsPath, scopes=['https://www.googleapis.com/auth/spreadsheets.readonly'])
-
-# # Create the Sheets API service
-# #service = build('sheets', 'v4', credentials=credentials) 
-
-# # The ID of the spreadsheet you want to access
-# document_id = '13vSFaJECdBDmHjRsYjTZgXxR0R_F4m-CnBgnJjt9tFM'
-
-# # Call the Docs API to get the document content
-# document = service.documents().get(documentId=document_id).execute()
-
-# # Extract the text content from the document
-# text_content = ''
-# for content in document.get('body').get('content'):
-#     if 'paragraph' in content:
-#         for element in content['paragraph']['elements']:
-#             text_content += element['textRun']['content']
-
-# # Print or process the text content as needed
-# print('data recieved')
-
-# The range of cells you want to retrieve data from
-#range_name = 'Sheet1!A1:B10'  # Example: Sheet1 is the name of the sheet, A1:B10 is the range
-
-# Call the Sheets API to get the values
-# result = service.spreadsheets().values().get(spreadsheetId=spreadsheet_id, range=range_name).execute()
-# values = result.get('values', [])
-
-# if not values:
-#     print('No data found in the spreadsheet.')
-# else:
-#     # Construct the message from the retrieved values
-#     message = "\n".join([f"{row[0]}: {row[1]}" for row in values])
-
-#     # Recipient's phone number or email associated with iMessage
-#     recipient = '1234567890'  # Replace with recipient's phone number
-
-#     # Send the message via iMessage
-#     imessage.send(recipient, message)
-#     print("Message sent successfully!")
-
+credentialsPath = '/Users/nmestrad/Documents/GoogleCredentials/mika-google-credentials.json'
 import googleapiclient.discovery as discovery
 from httplib2 import Http
 from oauth2client import client
 from oauth2client import file
 from oauth2client import tools
-from py_imessage import imessage
+from googleapiclient.errors import HttpError
+from datetime import datetime
 
-SCOPES = 'https://www.googleapis.com/auth/documents.readonly'
+SCOPES = ['https://www.googleapis.com/auth/documents.readonly','https://www.googleapis.com/auth/spreadsheets.readonly']
 DISCOVERY_DOC = 'https://docs.googleapis.com/$discovery/rest?version=v1'
+DISCOVERY_SHEET = 'https://sheets.googleapis.com/$discovery/rest?version=v4'
 DOCUMENT_ID = '13vSFaJECdBDmHjRsYjTZgXxR0R_F4m-CnBgnJjt9tFM'
+SAMPLE_SPREADSHEET_ID = "1tgB6W50nA90WUGSAhHOhOhk_G0iV6JLSv6MhUo4SNdw"
 
 
 def get_credentials():
@@ -78,7 +25,7 @@ def get_credentials():
     Returns:
         Credentials, the obtained credential.
     """
-    store = file.Storage('token.json')
+    store = file.Storage('/Users/nmestrad/Projects/automated-scripts/token.json')
     credentials = store.get()
 
     if not credentials or credentials.invalid:
@@ -125,7 +72,28 @@ def read_structural_elements(elements):
             text += read_structural_elements(toc.get('content'))
     return text
 
+def is_date(string):
+    try:
+        datetime.strptime(string, '%m/%d/%Y')
+        return True
+    except:
+        return False
 
+def gatherMessages(parsedText):
+    captured_messages = []
+    date_indices = [idx for idx, line in enumerate(parsedText) if is_date(line)]
+    for idx, dateIdx in enumerate(date_indices):
+        if len(date_indices) -1 == idx:
+            if len(parsedText) -1  <= dateIdx:
+                pass
+            else:
+                captured_messages.append(parsedText[dateIdx+1:])
+        else: 
+            startIdx=dateIdx+1
+            endIdx=date_indices[idx+1]
+            captured_messages.append(parsedText[startIdx:endIdx])
+    return captured_messages
+    
 def main():
     """Uses the Docs API to print out the text of a document."""
     credentials = get_credentials()
@@ -134,22 +102,59 @@ def main():
         'docs', 'v1', http=http, discoveryServiceUrl=DISCOVERY_DOC)
     doc = docs_service.documents().get(documentId=DOCUMENT_ID).execute()
     doc_content = doc.get('body').get('content')
-    print(read_structural_elements(doc_content))
+    text = read_structural_elements(doc_content)
+    print(f"{text}")
+    parsedText = text.split('\n')
+
+    messages = gatherMessages(parsedText)
+    
+    print(messages)
+
+    try:
+        sheet_service = discovery.build("sheets", "v4", http=http, discoveryServiceUrl = DISCOVERY_SHEET)
+
+        # Call the Sheets API
+        sheet = sheet_service.spreadsheets()
+        result = (
+            sheet.values().get(spreadsheetId=SAMPLE_SPREADSHEET_ID, range="A:ZZZ").execute()
+        )
+        # if sheet name not included it always gets the first sheet
+        #content = sheets_service.spreadsheets().values().get(spreadsheetId=spreadsheet_id, range="A:ZZZ").execute()
+
+        phone_numbers = [row[0] for row in result.get('values', [])]
+
+        if not phone_numbers:
+            print("No data found.")
+            return
+        
+        # print(text)
+           
+
+    except HttpError as err:
+        print(err)
+
     if not doc_content:
         print('no text')
-    else:
+    # else:
         # Construct the message from the retrieved values
         # message = "\n".join([f"{row[0]}: {row[1]}" for row in values])
 
         # Recipient's phone number or email associated with iMessage
-        recipient = '2242044024'  # Replace with recipient's phone number
+        #recipient = '2242044024'  # Replace with recipient's phone number
 
         # Send the message via iMessage
         # was getting a permissions issue with sending the imessage 
         # ran `crsutil disable` in terminal
 
-        imessage.send(recipient, read_structural_elements(doc_content))
-        print("Message sent successfully!")
+        # not using py_imessage because of configuration setup for allowing permissions to imessge 
+        # imessage.send(recipient, read_structural_elements(doc_content))
+        # return list of phone numbers and text message to send
+
+    ## convert phone numbers to applescript list
+    ##applescript_list_nums = "{" + ", ".join(map(repr, phone_numbers)) + "}"
+
+    ## applescript reads print values as the return value for a script :-|
+    # print('|**|'.join(phone_numbers + [text]))
 
 if __name__ == '__main__':
     main()
