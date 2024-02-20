@@ -1,6 +1,5 @@
 import os
-
-credentialsPath = '/Users/nmestrad/Documents/GoogleCredentials/mika-google-credentials.json'
+import gspread
 import googleapiclient.discovery as discovery
 from httplib2 import Http
 from oauth2client import client
@@ -8,12 +7,17 @@ from oauth2client import file
 from oauth2client import tools
 from googleapiclient.errors import HttpError
 from datetime import datetime
+from functools import reduce
+
 
 SCOPES = ['https://www.googleapis.com/auth/documents.readonly','https://www.googleapis.com/auth/spreadsheets.readonly']
 DISCOVERY_DOC = 'https://docs.googleapis.com/$discovery/rest?version=v1'
 DISCOVERY_SHEET = 'https://sheets.googleapis.com/$discovery/rest?version=v4'
 DOCUMENT_ID = '13vSFaJECdBDmHjRsYjTZgXxR0R_F4m-CnBgnJjt9tFM'
 SAMPLE_SPREADSHEET_ID = "1tgB6W50nA90WUGSAhHOhOhk_G0iV6JLSv6MhUo4SNdw"
+mikaCredentialsPath = '/Users/nmestrad/Documents/GoogleCredentials/credentials.json'
+CREDENTIALS_PATH="/Users/nmestrad/Documents/Keys/client_secret_975762424647-65soulb2m5h4b85o4gke286rjf8jtvfe.apps.googleusercontent.com.json"
+SERVICE_ACCOUNT_CREDENTIALS_PATH ="/Users/nmestrad/Documents/Keys/crafty-clover-254716-8282657ec03e.json"
 
 
 def get_credentials():
@@ -29,7 +33,7 @@ def get_credentials():
     credentials = store.get()
 
     if not credentials or credentials.invalid:
-        flow = client.flow_from_clientsecrets(credentialsPath, SCOPES)
+        flow = client.flow_from_clientsecrets(CREDENTIALS_PATH, SCOPES)
         credentials = tools.run_flow(flow, store)
     return credentials
 
@@ -92,7 +96,18 @@ def gatherMessages(parsedText):
             startIdx=dateIdx+1
             endIdx=date_indices[idx+1]
             captured_messages.append(parsedText[startIdx:endIdx])
-    return captured_messages
+
+    def combine(message, line):
+        if(line): 
+            message+=line
+        else:
+            message+= '\n'
+        return message
+
+    # takes the array items from the split messages and uses the combine function to turn them into strings with the line added
+    parsed_messages = [reduce(combine, message).strip() for message in captured_messages]
+
+    return parsed_messages
     
 def main():
     """Uses the Docs API to print out the text of a document."""
@@ -111,12 +126,22 @@ def main():
     print(messages)
 
     try:
+        # trying gspread methods 
+        gc = gspread.service_account(filename=SERVICE_ACCOUNT_CREDENTIALS_PATH)
+        worksheet = gc.open(SAMPLE_SPREADSHEET_ID)
+        sheet1 = worksheet.sheet1
+        sheet2 = worksheet.sheet2
+        numbers = sheet1.col_values(1)[1:]
+        print(numbers)
+
+
+        # Below is the google API docs method of retrieving data from sheets
         sheet_service = discovery.build("sheets", "v4", http=http, discoveryServiceUrl = DISCOVERY_SHEET)
 
         # Call the Sheets API
         sheet = sheet_service.spreadsheets()
         result = (
-            sheet.values().get(spreadsheetId=SAMPLE_SPREADSHEET_ID, range="A:ZZZ").execute()
+            sheet.values().get(spreadsheetId=SAMPLE_SPREADSHEET_ID, range="A:A").execute()
         )
         # if sheet name not included it always gets the first sheet
         #content = sheets_service.spreadsheets().values().get(spreadsheetId=spreadsheet_id, range="A:ZZZ").execute()
@@ -127,7 +152,7 @@ def main():
             print("No data found.")
             return
         
-        # print(text)
+        print(phone_numbers)
            
 
     except HttpError as err:
