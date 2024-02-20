@@ -1,3 +1,6 @@
 /token.json
 /.env
 /env
+
+# Removing tracking of any .env* environmental variable file
+*.env*

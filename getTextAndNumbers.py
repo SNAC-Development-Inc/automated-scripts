@@ -1,4 +1,5 @@
 import os
+from dotenv import load_dotenv
 import gspread
 import googleapiclient.discovery as discovery
 from httplib2 import Http
@@ -18,7 +19,6 @@ SAMPLE_SPREADSHEET_ID = "1tgB6W50nA90WUGSAhHOhOhk_G0iV6JLSv6MhUo4SNdw"
 mikaCredentialsPath = '/Users/nmestrad/Documents/GoogleCredentials/credentials.json'
 CREDENTIALS_PATH="/Users/nmestrad/Documents/Keys/client_secret_975762424647-65soulb2m5h4b85o4gke286rjf8jtvfe.apps.googleusercontent.com.json"
 SERVICE_ACCOUNT_CREDENTIALS_PATH ="/Users/nmestrad/Documents/Keys/crafty-clover-254716-8282657ec03e.json"
-
 
 def get_credentials():
     """Gets valid user credentials from storage.
@@ -111,27 +111,38 @@ def gatherMessages(parsedText):
     
 def main():
     """Uses the Docs API to print out the text of a document."""
-    credentials = get_credentials()
-    http = credentials.authorize(Http())
-    docs_service = discovery.build(
-        'docs', 'v1', http=http, discoveryServiceUrl=DISCOVERY_DOC)
-    doc = docs_service.documents().get(documentId=DOCUMENT_ID).execute()
-    doc_content = doc.get('body').get('content')
-    text = read_structural_elements(doc_content)
-    print(f"{text}")
-    parsedText = text.split('\n')
+    # credentials = get_credentials()
+    # http = credentials.authorize(Http())
+    # docs_service = discovery.build(
+    #     'docs', 'v1', http=http, discoveryServiceUrl=DISCOVERY_DOC)
+    # doc = docs_service.documents().get(documentId=DOCUMENT_ID).execute()
+    # doc_content = doc.get('body').get('content')
+    # text = read_structural_elements(doc_content)
+    # print(f"{text}")
+    # parsedText = text.split('\n')
 
-    messages = gatherMessages(parsedText)
+    # messages = gatherMessages(parsedText)
     
-    print(messages)
+    # print(messages)
+
+    load_dotenv()
+    MY_CREDENTIALS_PATH = os.getenv('MY_CREDENTIALS_PATH')
+    MY_SHEET_ID =  os.getenv('MY_SHEET_ID')
 
     try:
         # trying gspread methods 
-        gc = gspread.service_account(filename=SERVICE_ACCOUNT_CREDENTIALS_PATH)
-        worksheet = gc.open(SAMPLE_SPREADSHEET_ID)
-        sheet1 = worksheet.sheet1
-        sheet2 = worksheet.sheet2
-        numbers = sheet1.col_values(1)[1:]
+        gc = gspread.service_account(filename=MY_CREDENTIALS_PATH)
+        spreadsht = gc.open_by_key(MY_SHEET_ID)
+
+        # Grab wksheets by index (0 based index)
+        sheet1 = spreadsht.get_worksheet(0) # Named sheets would be better; index wouldn't matter
+        sheet2 = spreadsht.get_worksheet(1) # ex. usage spreadsht.worksheet("iPhone Numbers")
+
+        # Grab column values from both sheets as lists (pythonic arrays), and join the lists together
+        #### Note: this doesn't quite take into account which numbers are for which type of list
+        sht1_nums = sheet1.col_values(1)[1:]
+        sht2_nums = sheet2.col_values(1)[1:]
+        numbers = sht1_nums + sht2_nums
         print(numbers)
 
 
