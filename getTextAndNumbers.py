@@ -14,9 +14,7 @@ DISCOVERY_DOC = 'https://docs.googleapis.com/$discovery/rest?version=v1'
 DISCOVERY_SHEET = 'https://sheets.googleapis.com/$discovery/rest?version=v4'
 DOCUMENT_ID = '13vSFaJECdBDmHjRsYjTZgXxR0R_F4m-CnBgnJjt9tFM'
 SAMPLE_SPREADSHEET_ID = "1tgB6W50nA90WUGSAhHOhOhk_G0iV6JLSv6MhUo4SNdw"
-mikaCredentialsPath = '/Users/nmestrad/Documents/GoogleCredentials/credentials.json'
 CREDENTIALS_PATH="/Users/nmestrad/Documents/Keys/client_secret_975762424647-65soulb2m5h4b85o4gke286rjf8jtvfe.apps.googleusercontent.com.json"
-SERVICE_ACCOUNT_CREDENTIALS_PATH ="/Users/nmestrad/Documents/Keys/crafty-clover-254716-8282657ec03e.json"
 
 
 def get_credentials():
@@ -117,7 +115,6 @@ def main():
     doc = docs_service.documents().get(documentId=DOCUMENT_ID).execute()
     doc_content = doc.get('body').get('content')
     text = read_structural_elements(doc_content)
-    print(f"{text}")
     parsedText = text.split('\n')
 
     messages = gatherMessages(parsedText)
@@ -128,11 +125,10 @@ def main():
 
         # Call the Sheets API
         sheet = sheet_service.spreadsheets()
+        # Getting all the numbers in the first column of sheet1 and sheet2
         result = (
             sheet.values().batchGet(spreadsheetId=SAMPLE_SPREADSHEET_ID, ranges=['Sheet1!A2:A','Sheet2!A2:A']).execute()
         )
-        # if sheet name not included it always gets the first sheet
-        #content = sheets_service.spreadsheets().values().get(spreadsheetId=spreadsheet_id, range="A:ZZZ").execute()
         range_values = [range['values'] for range in result.get('valueRanges', [])]
         def parse(x,y):
             x.append(y[0])
@@ -152,25 +148,8 @@ def main():
 
     if not doc_content:
         print('no text')
-    # else:
-        # Construct the message from the retrieved values
-        # message = "\n".join([f"{row[0]}: {row[1]}" for row in values])
-
-        # Recipient's phone number or email associated with iMessage
-        #recipient = '2242044024'  # Replace with recipient's phone number
-
-        # Send the message via iMessage
-        # was getting a permissions issue with sending the imessage 
-        # ran `crsutil disable` in terminal
-
-        # not using py_imessage because of configuration setup for allowing permissions to imessge 
-        # imessage.send(recipient, read_structural_elements(doc_content))
-        # return list of phone numbers and text message to send
-
-    ## convert phone numbers to applescript list
-    ##applescript_list_nums = "{" + ", ".join(map(repr, phone_numbers)) + "}"
-
-    ## applescript reads print values as the return value for a script :-|
+ 
+    ## send phone numbers and message as a string to print out for the applescript to capture
     print('|**|'.join(phone_numbers + [messages[0]]))
 
 if __name__ == '__main__':
