@@ -1,5 +1,4 @@
 import os
-import gspread
 import googleapiclient.discovery as discovery
 from httplib2 import Http
 from oauth2client import client
@@ -104,7 +103,7 @@ def gatherMessages(parsedText):
             message+= '\n'
         return message
 
-    # takes the array items from the split messages and uses the combine function to turn them into strings with the line added
+    # takes the array items from the split messages and uses the combine function to turn them into strings with the new line added
     parsed_messages = [reduce(combine, message).strip() for message in captured_messages]
 
     return parsed_messages
@@ -123,36 +122,29 @@ def main():
 
     messages = gatherMessages(parsedText)
     
-    print(messages)
-
     try:
-        # trying gspread methods 
-        gc = gspread.service_account(filename=SERVICE_ACCOUNT_CREDENTIALS_PATH)
-        worksheet = gc.open(SAMPLE_SPREADSHEET_ID)
-        sheet1 = worksheet.sheet1
-        sheet2 = worksheet.sheet2
-        numbers = sheet1.col_values(1)[1:]
-        print(numbers)
-
-
         # Below is the google API docs method of retrieving data from sheets
         sheet_service = discovery.build("sheets", "v4", http=http, discoveryServiceUrl = DISCOVERY_SHEET)
 
         # Call the Sheets API
         sheet = sheet_service.spreadsheets()
         result = (
-            sheet.values().get(spreadsheetId=SAMPLE_SPREADSHEET_ID, range="A:A").execute()
+            sheet.values().batchGet(spreadsheetId=SAMPLE_SPREADSHEET_ID, ranges=['Sheet1!A2:A','Sheet2!A2:A']).execute()
         )
         # if sheet name not included it always gets the first sheet
         #content = sheets_service.spreadsheets().values().get(spreadsheetId=spreadsheet_id, range="A:ZZZ").execute()
-
-        phone_numbers = [row[0] for row in result.get('values', [])]
+        range_values = [range['values'] for range in result.get('valueRanges', [])]
+        def parse(x,y):
+            x.append(y[0])
+            return x
+        
+        parsed_numbers =[reduce(parse,set) for set in range_values]
+        
+        phone_numbers = parsed_numbers[0] + parsed_numbers[1]
 
         if not phone_numbers:
             print("No data found.")
             return
-        
-        print(phone_numbers)
            
 
     except HttpError as err:
@@ -179,7 +171,7 @@ def main():
     ##applescript_list_nums = "{" + ", ".join(map(repr, phone_numbers)) + "}"
 
     ## applescript reads print values as the return value for a script :-|
-    # print('|**|'.join(phone_numbers + [text]))
+    print('|**|'.join(phone_numbers + [messages[0]]))
 
 if __name__ == '__main__':
     main()

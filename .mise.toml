@@ -1,6 +1,6 @@
 [tools]
 #MISE_TOOL_OPTS__VENV=.venv
-python = {version='3.10.7', virtualenv='env'}
+python = {version='3.10.7', virtualenv='.venv'}
 #python = '3.10.7'
 
 [env]
