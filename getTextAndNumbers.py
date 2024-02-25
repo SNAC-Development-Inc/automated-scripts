@@ -16,7 +16,6 @@ DOCUMENT_ID = '13vSFaJECdBDmHjRsYjTZgXxR0R_F4m-CnBgnJjt9tFM'
 SAMPLE_SPREADSHEET_ID = "1tgB6W50nA90WUGSAhHOhOhk_G0iV6JLSv6MhUo4SNdw"
 CREDENTIALS_PATH="/Users/nmestrad/Documents/Keys/client_secret_975762424647-65soulb2m5h4b85o4gke286rjf8jtvfe.apps.googleusercontent.com.json"
 
-
 def get_credentials():
     """Gets valid user credentials from storage.
 
@@ -105,6 +104,22 @@ def gatherMessages(parsedText):
     parsed_messages = [reduce(combine, message).strip() for message in captured_messages]
 
     return parsed_messages
+
+def trucate_message_for_android(message):
+    # length of link to full message is 57 characters
+    link_to_full_message = "Read the rest: thesolarpunkproject.com/daily-weather-text"
+     
+    shortened_message = message[:90] + "... " + link_to_full_message # total length 151 characters
+    print("Length of shortened message ", len(shortened_message))
+    print("Message for Android users \n", shortened_message)
+
+    if len(shortened_message) > 160: # NOTE: Double check with Mika num of char/bytes
+        pass # trigger an alert
+
+    bytes_size = len(shortened_message.encode('utf-8'))
+    print("Message size in bytes ", bytes_size)
+
+    return shortened_message
     
 def main():
     """Uses the Docs API to print out the text of a document."""
@@ -118,6 +133,9 @@ def main():
     parsedText = text.split('\n')
 
     messages = gatherMessages(parsedText)
+
+    message_to_android_users = trucate_message_for_android(messages[0])
+    # print(message_to_android_users)
     
     try:
         # Below is the google API docs method of retrieving data from sheets
