@@ -98,7 +98,7 @@ def gatherMessages(parsedText):
         if(line): 
             message+=line
         else:
-            message+= '\n'
+            message+= '\n\n'
         return message
 
     # takes the array items from the split messages and uses the combine function to turn them into strings with the new line added
