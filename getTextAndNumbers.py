@@ -129,14 +129,15 @@ def main():
         result = (
             sheet.values().batchGet(spreadsheetId=SAMPLE_SPREADSHEET_ID, ranges=['Sheet1!A2:A','Sheet2!A2:A']).execute()
         )
-        range_values = [range['values'] for range in result.get('valueRanges', [])]
+        range_values = [range['values'] for range in result.get('valueRanges', []) if range.get('values', None) != None]
+        
         def parse(x,y):
             x.append(y[0])
             return x
         
         parsed_numbers =[reduce(parse,set) for set in range_values]
-        
-        phone_numbers = parsed_numbers[0] + parsed_numbers[1]
+                        
+        phone_numbers = [number for numbers in parsed_numbers for number in numbers]
 
         if not phone_numbers:
             print("No data found.")

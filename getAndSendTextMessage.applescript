@@ -2,7 +2,7 @@
 -- #1 REPLACE THE X's WITH THE PATH TO YOUR PYTHON SCRIPT
 set pythonScriptPath to "/Users/nmestrad/Projects/automated-scripts/getTextAndNumbers.py"
 -- #2 REPLACE THE X's WITH THE PATH TO WHERE YOUR PYTHON IS STORED ON YOUR COMPUTER
-set shellCommand to "/Users/nmestrad/Projects/automated-scripts/env/bin/python " & quoted form of pythonScriptPath
+set shellCommand to "/Users/nmestrad/Projects/automated-scripts/.venv/bin/python " & quoted form of pythonScriptPath
 
 -- this runs the python script and sets the return value to phoneNumbersAndMessages 
 set phoneNumbersAndMessages to do shell script shellCommand
@@ -11,14 +11,34 @@ sendTextMessages(phoneNumbers, textMessages)
 
 on sendTextMessages(phoneNumbers, textMessages)
 	tell application "Messages"
-		set smsService to 1st account whose service type = iMessage
-		
-		repeat with i from 1 to count of phoneNumbers
+		set smsMessageService to 1st account whose service type = SMS
+		-- set smsRecipient to participant phoneNumber of account id smsMessageType
+        set iMessageService to 1st account whose service type = iMessage
+		-- set iMessageRecipient to participant phoneNumber of account id iMessageType
+        repeat with i from 1 to count of phoneNumbers
 			set phoneNumber to item i of phoneNumbers
-			send textMessages to participant phoneNumber of smsService
-			delay 4
-		end repeat
+            try
+                send textMessages to participant phoneNumber of iMessageService
+                delay 4
+                log "sent message to " & phoneNumber
+            on error
+                try
+                send textMessages to participant phoneNumber of smsMessageService
+                on error errmsg
+                    log errmsg
+                end try
+            end try
+        end repeat
 	end tell
+    -- tell application "Messages"
+	-- 	set smsService to 1st account whose service type = iMessage
+		
+	-- 	repeat with i from 1 to count of phoneNumbers
+	-- 		set phoneNumber to item i of phoneNumbers
+	-- 		send textMessages to participant phoneNumber of smsService
+	-- 		delay 4
+	-- 	end repeat
+	-- end tell
 end sendTextMessages
 
 on parsePhoneNumbersAndMessages(phoneNumbersAndMessages)
