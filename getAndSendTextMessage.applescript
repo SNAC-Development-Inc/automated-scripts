@@ -18,12 +18,12 @@ on sendTextMessages(phoneNumbers, textMessages)
         repeat with i from 1 to count of phoneNumbers
 			set phoneNumber to item i of phoneNumbers
             try
-                send textMessages to participant phoneNumber of smsMessageService
+                send textMessages to participant phoneNumber of iMessageService
                 delay 4
                 log "sent message to " & phoneNumber
             on error
                 try
-                send textMessages to participant phoneNumber of iMessageService
+                send textMessages to participant phoneNumber of smsMessageService
                 on error errmsg
                     log errmsg
                 end try

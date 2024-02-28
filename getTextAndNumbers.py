@@ -7,6 +7,7 @@ from oauth2client import tools
 from googleapiclient.errors import HttpError
 from datetime import datetime
 from functools import reduce
+from twilioScript import sendTwilioSMS
 
 
 SCOPES = ['https://www.googleapis.com/auth/documents.readonly','https://www.googleapis.com/auth/spreadsheets.readonly']
@@ -14,8 +15,9 @@ DISCOVERY_DOC = 'https://docs.googleapis.com/$discovery/rest?version=v1'
 DISCOVERY_SHEET = 'https://sheets.googleapis.com/$discovery/rest?version=v4'
 DOCUMENT_ID = '13vSFaJECdBDmHjRsYjTZgXxR0R_F4m-CnBgnJjt9tFM'
 SAMPLE_SPREADSHEET_ID = "1tgB6W50nA90WUGSAhHOhOhk_G0iV6JLSv6MhUo4SNdw"
-CREDENTIALS_PATH="/Users/nmestrad/Documents/Keys/client_secret_975762424647-65soulb2m5h4b85o4gke286rjf8jtvfe.apps.googleusercontent.com.json"
-
+WEATHER_DOC_ID ='1eKyiPNUf9yIz3kyU3vHgHTpOpM92DfQi0vEaxFoRjms'
+WEATHER_SHEET_ID ='1gBBgYVX65Kje3UdWA0Do0CCvnRoGpZgk_0zE-rIsi2A'
+CREDENTIALS_PATH="/Users/nmestrad/Documents/Keys/client_secret_975762424647-65soulb2m5h4b85o4gke286rjf8jtvfe.apps.googleusercontent.com.json"                # 'From' number in Twilio
 
 def get_credentials():
     """Gets valid user credentials from storage.
@@ -105,14 +107,14 @@ def gatherMessages(parsedText):
     parsed_messages = [reduce(combine, message).strip() for message in captured_messages]
 
     return parsed_messages
-    
+
 def main():
     """Uses the Docs API to print out the text of a document."""
     credentials = get_credentials()
     http = credentials.authorize(Http())
     docs_service = discovery.build(
         'docs', 'v1', http=http, discoveryServiceUrl=DISCOVERY_DOC)
-    doc = docs_service.documents().get(documentId=DOCUMENT_ID).execute()
+    doc = docs_service.documents().get(documentId=WEATHER_DOC_ID).execute()
     doc_content = doc.get('body').get('content')
     text = read_structural_elements(doc_content)
     parsedText = text.split('\n')
@@ -127,9 +129,11 @@ def main():
         sheet = sheet_service.spreadsheets()
         # Getting all the numbers in the first column of sheet1 and sheet2
         result = (
-            sheet.values().batchGet(spreadsheetId=SAMPLE_SPREADSHEET_ID, ranges=['Sheet1!A2:A','Sheet2!A2:A']).execute()
+            sheet.values().batchGet(spreadsheetId=WEATHER_SHEET_ID, ranges=['Sheet1!A2:A','Sheet2!A2:A']).execute()
         )
         range_values = [range['values'] for range in result.get('valueRanges', []) if range.get('values', None) != None]
+        
+        
         
         def parse(x,y):
             x.append(y[0])
@@ -142,6 +146,8 @@ def main():
         if not phone_numbers:
             print("No data found.")
             return
+    
+    
            
 
     except HttpError as err:
@@ -152,6 +158,10 @@ def main():
  
     ## send phone numbers and message as a string to print out for the applescript to capture
     print('|**|'.join(phone_numbers + [messages[0]]))
+    
+    # sendTwilioSMS(messages[0])
+        
+        
 
 if __name__ == '__main__':
     main()
