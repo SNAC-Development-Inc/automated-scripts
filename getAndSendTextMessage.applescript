@@ -6,55 +6,50 @@ set shellCommand to "/Users/nmestrad/Projects/automated-scripts/.venv/bin/python
 
 -- this runs the python script and sets the return value to phoneNumbersAndMessages 
 set phoneNumbersAndMessages to do shell script shellCommand
-set {phoneNumbers, textMessages} to parsePhoneNumbersAndMessages(phoneNumbersAndMessages)
-sendTextMessages(phoneNumbers, textMessages)
+set {smsNumbers, iMessageNumbers, textMessage} to parsePhoneNumbersAndMessages(phoneNumbersAndMessages)
 
-on sendTextMessages(phoneNumbers, textMessages)
+sendTextMessages(smsNumbers, iMessageNumbers, textMessage)
+
+on sendTextMessages(smsNumbers, iMessageNumbers, textMessage)
 	tell application "Messages"
 		set smsMessageService to 1st account whose service type = SMS
-		-- set smsRecipient to participant phoneNumber of account id smsMessageType
         set iMessageService to 1st account whose service type = iMessage
-		-- set iMessageRecipient to participant phoneNumber of account id iMessageType
-        repeat with i from 1 to count of phoneNumbers
-			set phoneNumber to item i of phoneNumbers
+        -- sending via iMessage
+        repeat with i from 1 to count of iMessageNumbers
+			set phoneNumber to item i of iMessageNumbers
             try
-                send textMessages to participant phoneNumber of iMessageService
+                send textMessage to participant phoneNumber of iMessageService
                 delay 4
                 log "sent message to " & phoneNumber
-            on error
-                try
-                send textMessages to participant phoneNumber of smsMessageService
-                on error errmsg
-                    log errmsg
-                end try
+            on error errmsg
+                log errmsg
+            end try
+        end repeat
+        -- sending via SMS
+        repeat with i from 1 to count of smsNumbers
+			set phoneNumber to item i of smsNumbers
+            try
+                send textMessage to participant phoneNumber of smsMessageService
+                delay 4
+                log "sent message to " & phoneNumber
+            on error errmsg
+                log errmsg
             end try
         end repeat
 	end tell
-    -- tell application "Messages"
-	-- 	set smsService to 1st account whose service type = iMessage
-		
-	-- 	repeat with i from 1 to count of phoneNumbers
-	-- 		set phoneNumber to item i of phoneNumbers
-	-- 		send textMessages to participant phoneNumber of smsService
-	-- 		delay 4
-	-- 	end repeat
-	-- end tell
 end sendTextMessages
 
 on parsePhoneNumbersAndMessages(phoneNumbersAndMessages)
 	set delimiter to "|**|"
 	set phoneNumbersAndMessagesList to splitText(phoneNumbersAndMessages, delimiter)
-	-- repeat with itemString in phoneNumbersAndMessagesList
-	-- 	set {phoneNumber, message} to splitPhoneNumberAndMessage(itemString)
-	-- 	if phoneNumber is not equal to missing value then
-	-- 		set end of phoneNumbers to phoneNumber
-	-- 		set end of textMessages to message
-	-- 	end if
-	-- end repeat
-    set phoneNumbers to items 1 thru -2 of phoneNumbersAndMessagesList
-    set textMessage to item -1 of phoneNumbersAndMessagesList
+    set iMessageNumbers to items 1 thru -2 of phoneNumbersAndMessagesList
+    -- results is the all the android legacy numbers last sms message number and text message
+    set result to item -1 of phoneNumbersAndMessagesList
+    set smsNumbersAndMessage to splitText(result, "|$$|")
+    set smsNumbers to items 1 thru -2 of smsNumbersAndMessage
+    set textMessage to item -1 of smsNumbersAndMessage
 	
-	return {phoneNumbers, textMessage}
+	return {smsNumbers, iMessageNumbers, textMessage}
 end parsePhoneNumbersAndMessages
 
 on splitPhoneNumberAndMessage(itemString)

@@ -14,10 +14,12 @@ SCOPES = ['https://www.googleapis.com/auth/documents.readonly','https://www.goog
 DISCOVERY_DOC = 'https://docs.googleapis.com/$discovery/rest?version=v1'
 DISCOVERY_SHEET = 'https://sheets.googleapis.com/$discovery/rest?version=v4'
 DOCUMENT_ID = '13vSFaJECdBDmHjRsYjTZgXxR0R_F4m-CnBgnJjt9tFM'
-SAMPLE_SPREADSHEET_ID = "1tgB6W50nA90WUGSAhHOhOhk_G0iV6JLSv6MhUo4SNdw"
 WEATHER_DOC_ID ='1eKyiPNUf9yIz3kyU3vHgHTpOpM92DfQi0vEaxFoRjms'
 WEATHER_SHEET_ID ='1gBBgYVX65Kje3UdWA0Do0CCvnRoGpZgk_0zE-rIsi2A'
-CREDENTIALS_PATH="/Users/nmestrad/Documents/Keys/client_secret_975762424647-65soulb2m5h4b85o4gke286rjf8jtvfe.apps.googleusercontent.com.json"                # 'From' number in Twilio
+# TODO: create separate sheet with the devs and Mikas numbers to test this script
+TEST_SHEET_ID='1tgB6W50nA90WUGSAhHOhOhk_G0iV6JLSv6MhUo4SNdw'
+CREDENTIALS_PATH="/Users/mtosca/The Solarpunk Project/The Weather Text/Send Bulk SMS/the-weather-text-a9221899f621.json"                # 'From' number in Twilio
+
 
 def get_credentials():
     """Gets valid user credentials from storage.
@@ -129,23 +131,14 @@ def main():
         sheet = sheet_service.spreadsheets()
         # Getting all the numbers in the first column of sheet1 and sheet2
         result = (
-            sheet.values().batchGet(spreadsheetId=WEATHER_SHEET_ID, ranges=['Sheet1!A2:A','Sheet2!A2:A']).execute()
+            sheet.values().batchGet(spreadsheetId=TEST_SHEET_ID, ranges=['Sheet1!A2:A','Sheet2!A2:A']).execute()
         )
         range_values = [range['values'] for range in result.get('valueRanges', []) if range.get('values', None) != None]
         
         
+        imessage_numbers = [numberArray[0] for numberArray in range_values[0]]
+        sms_numbers = [numberArray[0] for numberArray in range_values[1]]        
         
-        def parse(x,y):
-            x.append(y[0])
-            return x
-        
-        parsed_numbers =[reduce(parse,set) for set in range_values]
-                        
-        phone_numbers = [number for numbers in parsed_numbers for number in numbers]
-
-        if not phone_numbers:
-            print("No data found.")
-            return
     
     
            
@@ -157,9 +150,10 @@ def main():
         print('no text')
  
     ## send phone numbers and message as a string to print out for the applescript to capture
-    print('|**|'.join(phone_numbers + [messages[0]]))
+    # TODO: separate SMS from iMessage phone numbers 
+    print('|**|'.join(imessage_numbers) +'|**|'+'|$$|'.join(sms_numbers + [messages[0]]))
     
-    # sendTwilioSMS(messages[0])
+    sendTwilioSMS(messages[0])
         
         
 

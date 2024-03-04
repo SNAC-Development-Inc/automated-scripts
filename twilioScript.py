@@ -24,14 +24,14 @@ def trucate_message_for_android(message):
     link_to_full_message = "Read the rest: thesolarpunkproject.com/daily-weather-text"
 
     shortened_message = message[:90] + "... " + link_to_full_message # total length 151 characters
-    print("Length of shortened message ", len(shortened_message))
-    print("Message for Android users \n", shortened_message)
+    # print("Length of shortened message ", len(shortened_message))
+    # print("Message for Android users \n", shortened_message)
 
     if len(shortened_message) > 160: # NOTE: Double check with Mika num of char/bytes
         pass # trigger an alert
 
     bytes_size = len(shortened_message.encode('utf-8'))
-    print("Message size in bytes ", bytes_size)
+    # print("Message size in bytes ", bytes_size)
 
     return shortened_message
     
@@ -48,7 +48,7 @@ def sendTwilioSMS(message):
         peoplereader = csv.reader(csvfile)
         numbers = set([p[0] for p in peoplereader]) # remove duplicate numbers
         
-    print(numbers)
+    # print(numbers)
 
 
     # Calculate how much it's going to cost:
@@ -56,18 +56,18 @@ def sendTwilioSMS(message):
     cost = MSG_COST * segments * messages
 
     # To Do:  log these prints to a file 
-    print("> {} messages of {} segments each will be sent, at a cost of ${} ".format(messages, segments, cost))
+    # print("> {} messages of {} segments each will be sent, at a cost of ${} ".format(messages, segments, cost))
 
     # Check you really want to send them
     # Set up Twilio client
     client = Client(account_sid, auth_token)
 
     # Send the messages
-    # for num in numbers:
-    #     # Send the sms text to the number from the CSV file:
-    #     # To do: just send to Mika's number at first
-    #     print("Sending to " + num)
-    #     client.messages.create(to=num, from_=from_num, body=message_to_android_users)
-    #     time.sleep(TIMEOUT_SECONDS)
+    for num in numbers:
+        # Send the sms text to the number from the CSV file:
+        # TODO: test with number
+        # print("Sending to " + num)
+        client.messages.create(to=num, from_=from_num, body=message_to_android_users)
+        time.sleep(TIMEOUT_SECONDS)
 
     # print("Exiting!")
