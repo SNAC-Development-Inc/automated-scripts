@@ -67,7 +67,8 @@ def sendTwilioSMS(message):
         # Send the sms text to the number from the CSV file:
         # TODO: test with number
         # print("Sending to " + num)
-        client.messages.create(to=num, from_=from_num, body=message_to_android_users)
-        time.sleep(TIMEOUT_SECONDS)
+        # uncomment when want to test
+        # client.messages.create(to=num, from_=from_num, body=message_to_android_users)
+        # time.sleep(TIMEOUT_SECONDS)
 
     # print("Exiting!")
